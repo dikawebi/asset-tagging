@@ -1,8 +1,10 @@
 import { Select } from '../../../../../support/resources/js/utilities/select.js'
 
 export default function selectTableColumn({
+    ariaLabel,
     canOptionLabelsWrap,
     canSelectPlaceholder,
+    clearButtonLabel,
     getOptionLabelUsing,
     getOptionsUsing,
     getSearchResultsUsing,
@@ -26,6 +28,7 @@ export default function selectTableColumn({
     searchableOptionFields,
     searchDebounce,
     searchingMessage,
+    searchLabel,
     searchPrompt,
     state,
 }) {
@@ -43,8 +46,10 @@ export default function selectTableColumn({
         init() {
             if (!isNative) {
                 this.select = new Select({
+                    ariaLabel,
                     canOptionLabelsWrap,
                     canSelectPlaceholder,
+                    clearButtonLabel,
                     element: this.$refs.select,
                     getOptionLabelUsing,
                     getOptionsUsing,
@@ -69,6 +74,7 @@ export default function selectTableColumn({
                     searchableOptionFields,
                     searchDebounce,
                     searchingMessage,
+                    searchLabel,
                     searchPrompt,
                     state: this.state,
                 })

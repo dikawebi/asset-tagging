@@ -51,9 +51,13 @@ class PhpRedisConnector implements Connector
     {
         $options = array_merge($options, $clusterOptions, Arr::pull($config, 'options', []));
 
-        return new PhpRedisClusterConnection($this->createRedisClusterInstance(
+        $connector = fn () => $this->createRedisClusterInstance(
             array_map($this->buildClusterConnectionString(...), $config), $options
-        ));
+        );
+
+        return new PhpRedisClusterConnection($connector(), $connector, array_merge($config, [
+            'command_retries' => (int) Arr::get($options, 'command_retries', 0),
+        ]));
     }
 
     /**
@@ -267,11 +271,27 @@ class PhpRedisConnector implements Connector
      */
     protected function formatHost(array $options)
     {
-        if (isset($options['scheme'])) {
-            return Str::start($options['host'], "{$options['scheme']}://");
+        $host = $options['host'] ?? null;
+
+        if (! is_string($host) || $host === '') {
+            throw new InvalidArgumentException('Redis host must be a non-empty string.');
         }
 
-        return $options['host'];
+        $hostScheme = parse_url($host, PHP_URL_SCHEME);
+
+        if (isset($options['scheme'])) {
+            if (is_string($hostScheme)) {
+                if (strcasecmp($hostScheme, $options['scheme']) !== 0) {
+                    throw new InvalidArgumentException('The scheme configured in the Redis host option must match the scheme option.');
+                }
+
+                return $host;
+            }
+
+            return Str::start($host, "{$options['scheme']}://");
+        }
+
+        return $host;
     }
 
     /**

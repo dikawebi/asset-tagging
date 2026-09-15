@@ -5,6 +5,7 @@ namespace Spatie\Permission\Traits;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Contracts\Permission;
@@ -326,6 +327,13 @@ trait HasPermissions
      */
     public function getPermissionsViaRoles(): Collection
     {
+        // This trait is shared by both Role and Permission models; Larastan analyses it once per
+        // consuming class, pinning $this to that one class, so it reports the check for the other
+        // class as dead code even though both checks are needed at runtime.
+        // The phpstan finding appears to be environment-dependent, invisible to the current CI runner
+        // but reproducible on at least one real local dev setup (Mac + Herd + PHP 8.4.6).
+        // Ignoring here so local and CI static-analysis results stay consistent for all contributors.
+        // @phpstan-ignore instanceof.alwaysFalse
         if ($this instanceof Role || $this instanceof Permission) {
             return collect();
         }
@@ -376,6 +384,32 @@ trait HasPermissions
 
                 return $array;
             }, []);
+    }
+
+    private function detachPermissions(?array $permissions = null): int
+    {
+        $relation = $this->permissions();
+
+        if (! Config::teamsEnabled() || $this instanceof Role || $relation->getPivotClass() === Pivot::class) {
+            return $relation->detach($permissions);
+        }
+
+        // Custom pivot deletes do not include the team key, so keep deletion on the scoped pivot query.
+        $query = $relation->newPivotQuery();
+
+        if (! is_null($permissions)) {
+            if (empty($permissions)) {
+                return 0;
+            }
+
+            $query->whereIn($relation->getQualifiedRelatedPivotKeyName(), $permissions);
+        }
+
+        $results = $query->delete();
+
+        $relation->touchIfTouching();
+
+        return $results;
     }
 
     /**
@@ -443,8 +477,17 @@ trait HasPermissions
     {
         if ($this->getModel()->exists) {
             $this->collectPermissions($permissions);
-            $this->permissions()->detach();
-            $this->setRelation('permissions', collect());
+
+            if (Config::eventsEnabled()) {
+                $currentPermissions = $this->permissions()->get();
+
+                if ($currentPermissions->isNotEmpty()) {
+                    $this->revokePermissionTo($currentPermissions);
+                }
+            } else {
+                $this->detachPermissions();
+                $this->setRelation('permissions', collect());
+            }
         }
 
         return $this->givePermissionTo($permissions);
@@ -459,8 +502,9 @@ trait HasPermissions
     public function revokePermissionTo($permission): static
     {
         $storedPermission = $this->getStoredPermission($permission);
+        $permissions = $this->collectPermissions($storedPermission);
 
-        $this->permissions()->detach($storedPermission);
+        $this->detachPermissions($permissions);
 
         if ($this instanceof Role) {
             $this->forgetCachedPermissions();

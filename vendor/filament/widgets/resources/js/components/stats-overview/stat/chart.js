@@ -1,14 +1,35 @@
-import Chart from 'chart.js/auto'
+import {
+    CategoryScale,
+    Chart,
+    Filler,
+    LineController,
+    LineElement,
+    LinearScale,
+    PointElement,
+} from 'chart.js'
 
-export default function statsOverviewStatChart({
-    dataChecksum,
-    labels,
-    values,
-}) {
+import readCustomProperties from '../../../custom-properties'
+
+Chart.register(
+    CategoryScale,
+    Filler,
+    LineController,
+    LineElement,
+    LinearScale,
+    PointElement,
+)
+
+export default function statsOverviewStatChart({ key, labels, values }) {
     return {
-        dataChecksum,
+        key,
 
         init() {
+            this.$wire.$on('updateStatsOverviewChartData', (event) => {
+                if (event.key === this.key) {
+                    this.updateChartData(event.data)
+                }
+            })
+
             Alpine.effect(() => {
                 Alpine.store('theme')
 
@@ -45,12 +66,13 @@ export default function statsOverviewStatChart({
                 return
             }
 
-            // Alpine re-initializes this component when `dataChecksum` changes (on data
-            // updates from Livewire polling). The canvas is reused, so any prior Chart.js
-            // instance must be torn down before constructing a new one.
+            // Defensively tear down any pre-existing chart bound to this canvas before
+            // constructing a new one (the canvas is reused if the component re-initializes).
             this.getChart()?.destroy()
 
             const { backgroundColor, borderColor } = this.getChartColors()
+            const { borderWidth, fill, lineTension } =
+                this.getChartCustomProperties()
 
             new Chart(this.$refs.canvas, {
                 type: 'line',
@@ -59,9 +81,9 @@ export default function statsOverviewStatChart({
                     datasets: [
                         {
                             data: values,
-                            borderWidth: 2,
-                            fill: 'start',
-                            tension: 0.5,
+                            borderWidth,
+                            fill,
+                            tension: lineTension,
                             backgroundColor,
                             borderColor,
                         },
@@ -97,6 +119,18 @@ export default function statsOverviewStatChart({
             })
         },
 
+        updateChartData(newValues) {
+            const chart = this.getChart()
+
+            if (!chart) {
+                return
+            }
+
+            chart.data.labels = newValues.map((value, index) => index)
+            chart.data.datasets[0].data = newValues
+            chart.update('none')
+        },
+
         updateChartTheme() {
             const chart = this.getChart()
 
@@ -106,9 +140,19 @@ export default function statsOverviewStatChart({
 
             const { backgroundColor, borderColor } = this.getChartColors()
 
+            // The custom properties are re-read too: a theme may legitimately give light
+            // and dark mode a different line.
+            const { borderWidth, fill, lineTension } =
+                this.getChartCustomProperties()
+
             chart.data.datasets[0].backgroundColor = backgroundColor
             chart.data.datasets[0].borderColor = borderColor
-            chart.update('none')
+            chart.data.datasets[0].borderWidth = borderWidth
+            chart.data.datasets[0].fill = fill
+            chart.data.datasets[0].tension = lineTension
+
+            // `'resize'` rather than `'none'`, for the reason given in the chart widget.
+            chart.update('resize')
         },
 
         getChart() {
@@ -126,6 +170,19 @@ export default function statsOverviewStatChart({
                 ).color,
                 borderColor: getComputedStyle(this.$refs.borderColorElement)
                     .color,
+            }
+        },
+
+        // The parts of the sparkline that a stylesheet cannot otherwise reach, since
+        // Chart.js paints them onto a bare `<canvas>`. Each fallback is the value the
+        // sparkline has always used.
+        getChartCustomProperties() {
+            const { number, keyword } = readCustomProperties(this.$el)
+
+            return {
+                borderWidth: number('--stat-chart-border-width', 2),
+                fill: keyword('--stat-chart-fill', 'start'),
+                lineTension: number('--stat-chart-line-tension', 0.5),
             }
         },
 

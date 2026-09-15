@@ -5,6 +5,7 @@ namespace Filament\Actions\Exports;
 use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\Exports\Downloaders\Contracts\Downloader;
 use Filament\Actions\Exports\Enums\Contracts\ExportFormat as ExportFormatInterface;
 use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Actions\Exports\Models\Export;
@@ -71,6 +72,17 @@ abstract class Exporter
      * @return array<ExportColumn>
      */
     abstract public static function getColumns(): array;
+
+    /**
+     * @return array<ExportColumn>
+     */
+    public static function getVisibleColumns(): array
+    {
+        return array_filter(
+            static::getColumns(),
+            fn (ExportColumn $column): bool => $column->isVisible(),
+        );
+    }
 
     /**
      * @return array<Component | Action | ActionGroup>
@@ -211,6 +223,11 @@ abstract class Exporter
         return [ExportFormat::Csv, ExportFormat::Xlsx];
     }
 
+    public static function getDownloader(ExportFormatInterface $format): Downloader
+    {
+        return $format->getDownloader();
+    }
+
     public function getXlsxCellStyle(): ?Style
     {
         return null;
@@ -240,6 +257,11 @@ abstract class Exporter
     public function makeXlsxRow(array $values, ?Style $style = null): Row
     {
         return Row::fromValues($values, $style);
+    }
+
+    public function configureXlsxWriterAfterOpen(Writer $writer): Writer
+    {
+        return $writer;
     }
 
     public function configureXlsxWriterBeforeClose(Writer $writer): Writer

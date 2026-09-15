@@ -17,6 +17,27 @@ RichEditor::make('content')
 
 <AutoScreenshot name="forms/fields/rich-editor/simple" alt="Rich editor" version="5.x" />
 
+## Configuring Livewire's maximum nesting depth
+
+The rich editor synchronizes its TipTap document with Livewire as nested data. Livewire limits nested property paths to 10 levels by default, which may not be enough for structures such as lists and tables. If you encounter a `Livewire\Exceptions\MaxNestingDepthExceededException` and your application does not already have a `config/livewire.php` file, publish Livewire's configuration file:
+
+```bash
+php artisan livewire:publish --config
+```
+
+The command overwrites an existing `config/livewire.php` file, so skip it if you have already published the configuration.
+
+Then, increase the existing `max_nesting_depth` setting in `config/livewire.php`. For example, a depth of 32 allows room for deeply nested rich content:
+
+```php
+'payload' => [
+    // ...
+    'max_nesting_depth' => 32,
+],
+```
+
+Only change the `max_nesting_depth` value in the existing `payload` array, so that you preserve Livewire's other version-specific payload settings.
+
 ## Storing content as JSON
 
 By default, the rich editor stores content as HTML. If you would like to store the content as JSON instead, you can use the `json()` method:
@@ -196,6 +217,22 @@ RichEditor::make('content')
 <AutoScreenshot name="forms/fields/rich-editor/textual-toolbar-button-group-open" alt="Rich editor with an open textual toolbar button group dropdown" version="5.x" />
 
 In this example, the `Paragraph` dropdown items display their icon alongside a text label (e.g., "Paragraph", "Heading 1"). The `Alignment` dropdown remains icon-only.
+
+## Setting the height
+
+You may control the editor's height by defining the `minHeight()` and `maxHeight()` methods, which accept any CSS length value:
+
+```php
+use Filament\Forms\Components\RichEditor;
+
+RichEditor::make('content')
+    ->minHeight('12rem')
+    ->maxHeight('24rem')
+```
+
+The editor has a minimum height of `10rem` by default. Once the content exceeds `maxHeight()`, the editor stops growing and becomes scrollable. Each method may be used on its own — `minHeight()` sets a starting height while still allowing the editor to grow, and `maxHeight()` caps how tall it may become. Pass `null` to `minHeight()` to use the editor's intrinsic `3rem` minimum height, or to `maxHeight()` to remove the cap. These constraints also apply when the editor is disabled.
+
+<UtilityInjection set="formFields" version="5.x">As well as allowing static values, the `minHeight()` and `maxHeight()` methods also accept functions to dynamically calculate them. You can inject various utilities into the functions as parameters.</UtilityInjection>
 
 ## Customizing text colors
 
@@ -414,7 +451,7 @@ RichEditor::make('content')
 
 Filament parses the record's original content (via `$record->getOriginal()` for the attribute matching the field name) and allows only the `data-id` values already present. Any other existing `data-id` causes the field to fail validation, so the record is never saved with a tampered value. Newly uploaded images always pass through.
 
-If you are using the [`spatie/laravel-medialibrary` plugin](https://filamentphp.com/plugins/filament-spatie-media-library#using-media-library-for-rich-editor-file-attachments) as the file attachment provider, this protection is already implicit — it looks up each `data-id` against the record's own media collection.
+The default file attachment provider performs no per-record scoping — any `data-id` that resolves to a file on the configured disk is accepted unless you enable `preventFileAttachmentPathTampering()` (or isolate uploads at the disk/directory level). If instead you are using the [`spatie/laravel-medialibrary` plugin](https://filamentphp.com/plugins/filament-spatie-media-library#using-media-library-for-rich-editor-file-attachments) as the file attachment provider, this protection is already implicit — it looks up each `data-id` against the record's own media collection via `$media->has($file)`, so a `data-id` for another record's media is rejected automatically.
 
 <Aside variant="warning">
     `preventFileAttachmentPathTampering()` needs a record on the form. Without one — for example, on a create page — every existing `data-id` fails validation unless the [`allowFilePathUsing`](#allowing-additional-data-id-values-with-a-callback) callback approves it. New uploads are unaffected.

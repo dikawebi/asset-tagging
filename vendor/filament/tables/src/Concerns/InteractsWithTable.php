@@ -91,8 +91,24 @@ trait InteractsWithTable
             );
         }
 
-        if ($this->getTable()->isDefaultGroupSelectable()) {
-            $this->tableGrouping = "{$this->getTable()->getDefaultGroup()->getId()}:asc";
+        $shouldPersistGroupInSession = $this->getTable()->persistsGroupInSession();
+        $groupingSessionKey = $this->getTableGroupingSessionKey();
+        $hasPersistedGroupInSession = $shouldPersistGroupInSession && session()->exists($groupingSessionKey);
+
+        if (blank($this->tableGrouping)) {
+            if ($hasPersistedGroupInSession) {
+                $sessionGrouping = session()->get($groupingSessionKey);
+                $this->tableGrouping = is_string($sessionGrouping) ? $sessionGrouping : null;
+            } elseif ($this->getTable()->isDefaultGroupSelectable()) {
+                $this->tableGrouping = "{$this->getTable()->getDefaultGroup()->getId()}:{$this->getTable()->getDefaultGroupDirection()}";
+            }
+        }
+
+        if ($shouldPersistGroupInSession) {
+            session()->put(
+                $groupingSessionKey,
+                $this->tableGrouping,
+            );
         }
 
         $shouldPersistSearchInSession = $this->getTable()->persistsSearchInSession();
@@ -129,6 +145,9 @@ trait InteractsWithTable
         $this->tableColumnSearches = $this->castTableColumnSearches(
             $this->tableColumnSearches,
         );
+
+        // Seed individually searchable columns named after a JavaScript array property (e.g. `length`), so `$tableColumnSearches` serializes to a JSON object instead of an array and `wire:model` reads the search value rather than the array property.
+        $this->fillReservedTableColumnSearchKeys();
 
         if ($shouldPersistColumnSearchesInSession) {
             session()->put(
