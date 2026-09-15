@@ -14,4 +14,4 @@ services:
         value: cookie
       - key: CACHE_STORE
         value: array
-    outputDir: public
+    outputDir: dist
