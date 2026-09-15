@@ -1,46 +1,58 @@
-# php-app-vercel
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-[...]
 
-![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
-![Composer](https://img.shields.io/badge/Composer-885630?style=for-the-badge&logo=composer&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-Template repository to deploy PHP application to Vercel.
+## About Laravel
 
-## Structure 📂
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of de[...]
+
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
+
+## Learning Laravel
+
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with th[...]
+
+In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging[...]
+
+You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while lea[...]
+
+## Agentic Development
+
+Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge[...]
+
+```bash
+composer require laravel/boost --dev
+
+php artisan boost:install
 ```
-php-app-vercel
-├── .github
-├── api
-├── public
-│   ├── images
-│   ├── scripts
-│   └── styles
-├── .env.example
-├── .gitignore
-├── .vercelignore
-├── LICENSE
-├── README.md
-├── composer.json
-├── composer.lock
-└── vercel.json
-```
-- [.github](.github/) is a folder that used to place Github related stuff, like CI pipeline.
-- [api](api/) is a main folder that contains the PHP file.
-- [public](public/) is a folder that contains the static files like images, scripts, and styles.
-- [.env.example](.env.example) is a file that contains the environment variables used in this app.
-- [.gitignore](.gitignore) is a file to exclude some folders and files from Git.
-- [.vercelignore](.vercelignore) is a file to exclude some folders and files from Vercel.
-- [LICENSE](LICENSE) is a file that contains the license used in this app.
-- [README.md](README.md) is the file you are reading now.
-- [composer.json](composer.json) is a file that contains the dependencies used and metadata in this app.
-- [composer.lock](composer.lock) is a file that contains detailed list of all the dependencies and their specific versions that are currently installed in this app.
-- [vercel.json](vercel.json) is a file that contains configuration and override the default behavior of Vercel.
 
-## Installation 🛠️
-- See [here](https://php-app-vercel.vercel.app/) for more information about installation and usage.
+Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
-## References
-- [Vercel Documentation](https://vercel.com/docs)
-- [Vercel Community](https://github.com/vercel-community/php)
-- [Vercel Examples](https://github.com/juicyfx/vercel-examples)
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly a[...]
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
