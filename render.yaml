@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: asset-tagging
+    runtime: php
+    plan: standard
+    buildCommand: bash render-build.sh
+    startCommand: 'php -S 0.0.0.0:10000 -t public'
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_STORE
+        value: array
+    outputDir: dist

@@ -2,13 +2,17 @@
 # exit on error
 set -o errexit
 
-# Install dependensi
+# Install Node dependencies and build frontend assets
+npm ci
+npm run build
+
+# Install PHP dependencies
 composer install --no-dev --optimize-autoloader
 
-# Jalankan optimasi Laravel
+# Run Laravel optimizations
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Jalankan migrasi database otomatis saat deploy
+# Run database migrations
 php artisan migrate --force
