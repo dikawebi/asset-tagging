@@ -16,7 +16,7 @@ class MasterDataSeeder extends Seeder
             'brands' => ['Apple', 'Asus', 'Dell', 'Lenovo', 'HP'],
             'categories' => ['Laptop', 'Monitor', 'Printer', 'Server', 'Peripherals'],
             'departments' => ['IT', 'HRD', 'Finance', 'Marketing', 'Operations'],
-            'locations' => ['Gudang Pusat', 'Kantor Jakarta', 'Kantor Surabaya', 'Warehouse B']
+            'locations' => ['Gudang Site BUA', 'HO Jakarta', 'Puruk Cahu', 'Port']
         ];
 
         foreach ($data['brands'] as $name) Brand::firstOrCreate(['name' => $name]);

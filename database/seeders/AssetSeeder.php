@@ -19,7 +19,7 @@ class AssetSeeder extends Seeder
         $brandId = Brand::first()->id;
 
         Asset::withoutEvents(function () use ($categoryId, $locationId, $departmentId, $brandId) {
-            for ($i = 3; $i <= 200; $i++) {
+            for ($i = 1; $i <= 203; $i++) {
                 $assetId = sprintf('IT-%s-%04d', date('Y'), $i);
 
                 Asset::create([
@@ -38,6 +38,6 @@ class AssetSeeder extends Seeder
             }
         });
 
-        $this->command->info('Berhasil membuat 198 asset: IT-' . date('Y') . '-0003 s/d IT-' . date('Y') . '-0200');
+        $this->command->info('Berhasil membuat 203 asset: IT-' . date('Y') . '-0001 s/d IT-' . date('Y') . '-0203');
     }
 }

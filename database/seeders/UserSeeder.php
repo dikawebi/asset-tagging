@@ -35,9 +35,36 @@ class UserSeeder extends Seeder
 
         // 5. Buat User Admin
         $admin = User::firstOrCreate(
-            ['email' => 'admin@email.com'],
+            ['email' => 'yogi.windraya@borneoprima.com'],
             [
-                'name' => 'Administrator',
+                'name' => 'Yogi Windraya',
+                'password' => Hash::make('administrator'),
+            ]
+        );
+        $admin->assignRole($adminRole);
+
+        $admin = User::firstOrCreate(
+            ['email' => 'ali.abidin@borneoprima.com'],
+            [
+                'name' => 'Ali Abidin',
+                'password' => Hash::make('administrator'),
+            ]
+        );
+        $admin->assignRole($adminRole);
+
+        $admin = User::firstOrCreate(
+            ['email' => 'andika.kuswidyarto@borneoprima.com'],
+            [
+                'name' => 'Andika Kuswidyarto',
+                'password' => Hash::make('administrator'),
+            ]
+        );
+        $admin->assignRole($adminRole);
+
+        $admin = User::firstOrCreate(
+            ['email' => 'rio.hidayat@borneoprima.com'],
+            [
+                'name' => 'Rio Hidayat',
                 'password' => Hash::make('administrator'),
             ]
         );
