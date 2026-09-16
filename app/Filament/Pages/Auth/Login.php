@@ -44,7 +44,12 @@ class Login extends BaseLogin
             ->required()
             ->autocomplete('username')
             ->autofocus()
-            ->extraInputAttributes(['inputmode' => 'email']);
+            ->extraInputAttributes([
+                'inputmode' => 'email',
+                'autocapitalize' => 'none',
+                'autocorrect' => 'off',
+                'spellcheck' => 'false',
+            ]);
     }
 
     protected function getPasswordFormComponent(): Component

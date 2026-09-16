@@ -281,7 +281,8 @@
     background-image: url('/images/login-side.jpg');
     background-size: cover;
     background-position: center;
-    animation: bp-kenburns 28s ease-in-out infinite alternate;
+    animation: bp-kenburns 22s ease-in-out infinite alternate;
+    will-change: transform;
 }
 
 .bp-fs-veil {
@@ -289,37 +290,10 @@
     z-index: 1;
     inset: 0;
     background:
-        linear-gradient(200deg, rgb(15 23 42 / 0.25) 0%, rgb(15 23 42 / 0.55) 55%, rgb(15 23 42 / 0.88) 100%),
-        linear-gradient(90deg, rgb(15 23 42 / 0.30) 0%, rgb(15 23 42 / 0.12) 32%, transparent 70%);
+        linear-gradient(200deg, rgb(15 23 42 / 0.25) 0%, rgb(15 23 42 / 0.55) 55%, rgb(15 23 42 / 0.88) 100%);
 }
 
-/* Soft edge where the form panel meets the photo.
-   Lives under the side content, so cards and footer link stay untouched. */
-.bp-fs-side::before {
-    content: '';
-    position: absolute;
-    z-index: 2;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 12rem;
-    pointer-events: none;
-    background: linear-gradient(90deg,
-        rgb(248 250 252 / 0.98) 0%,
-        rgb(241 245 249 / 0.72) 30%,
-        rgb(226 232 240 / 0.38) 58%,
-        rgb(226 232 240 / 0.12) 80%,
-        transparent 100%);
-}
-
-.dark .bp-fs-side::before {
-    background: linear-gradient(90deg,
-        rgb(15 23 42 / 0.98) 0%,
-        rgb(15 23 42 / 0.72) 30%,
-        rgb(30 41 59 / 0.38) 58%,
-        rgb(30 41 59 / 0.12) 80%,
-        transparent 100%);
-}
+/* Penghubung form–foto dihilangkan: batas kiri-kanan kini tegas tanpa overlay. */
 
 .bp-fs-side-inner {
     position: relative;
@@ -435,7 +409,7 @@
 
 @keyframes bp-kenburns {
     from { transform: scale(1) translate(0, 0); }
-    to { transform: scale(1.1) translate(-1.5%, 1.5%); }
+    to { transform: scale(1.18) translate(-2%, 2%); }
 }
 
 @keyframes bp-rise {
@@ -453,11 +427,118 @@
     50% { box-shadow: 0 0 0 6px rgb(22 163 74 / 0.08); }
 }
 
+/* ===== Login polish: micro-interaction halus, layout & warna tidak berubah ===== */
+
+/* Transisi fokus input + ikon prefix ikut menyala lembut */
+.bp-fs .fi-input,
+.bp-fs input {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.bp-fs .fi-fo-field-wrp:focus-within .fi-input {
+    border-color: rgb(0 102 255 / 0.55) !important;
+    box-shadow: 0 0 0 4px rgb(0 102 255 / 0.12) !important;
+}
+
+.bp-fs .fi-fo-field-wrp:focus-within .fi-input-prefix {
+    color: #0066ff;
+}
+
+/* Tombol: feedback tekan + state loading/disabled + fokus keyboard */
+.bp-fs .fi-ac-btn-action[action="authenticate"]:active,
+.bp-fs .fi-btn[action="authenticate"]:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.bp-fs .fi-ac-btn-action[action="authenticate"]:disabled,
+.bp-fs .fi-btn[action="authenticate"]:disabled {
+    opacity: 0.75;
+    cursor: wait;
+}
+
+.bp-fs a:focus-visible,
+.bp-fs button:focus-visible,
+.bp-fs input:focus-visible {
+    outline: 2px solid rgb(0 102 255 / 0.65);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+}
+
+/* Checkbox "ingat saya": konsisten dengan primer brand */
+.bp-fs input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #0066ff;
+}
+
+/* Feature cards: entrance berurutan + hover terangkat sangat halus */
+.bp-fs-feature {
+    animation: bp-rise 0.6s ease both;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.bp-fs-feature:nth-child(2) { animation-delay: 0.08s; }
+.bp-fs-feature:nth-child(3) { animation-delay: 0.16s; }
+
+.bp-fs-feature:hover {
+    transform: translateY(-2px);
+    background: rgb(255 255 255 / 0.11);
+}
+
+/* Hint Caps Lock: mungil, tidak menggeser layout secara kasar */
+.bp-caps-hint {
+    margin-top: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #b45309;
+}
+
+.dark .bp-caps-hint {
+    color: #fbbf24;
+}
+
+/* Keterangan portal internal di bawah form */
+.bp-internal-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 1.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.dark .bp-internal-note {
+    color: #94a3b8;
+}
+
+.bp-internal-note-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex-shrink: 0;
+    color: #0066ff;
+}
+
+/* Logo: sedikit hidup saat hover, tanpa mengubah ukuran/posisi */
+.bp-fs-logo {
+    transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+.bp-fs-logo:hover {
+    transform: translateY(-1px);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .bp-fs-photo,
     .bp-fs-form-inner,
     .bp-fs-side,
+    .bp-fs-feature,
+    .bp-fs-logo,
+    .bp-fs .fi-ac-btn-action[action="authenticate"],
+    .bp-fs .fi-btn[action="authenticate"],
     .bp-auth-badge-dot {
         animation: none;
+        transition: none;
     }
 }

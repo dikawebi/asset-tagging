@@ -58,3 +58,8 @@ Route::get('/', function () {
 Route::get('/preview-branding', function () {
     return view('brand-preview');
 })->name('brand.preview');
+
+// Galeri 4 konsep login, layout split tetap (sementara, hapus sebelum production)
+Route::get('/preview-login', function () {
+    return view('login-concepts');
+})->name('brand.login-concepts');
