@@ -22,13 +22,20 @@ class AssetForm
                     ->required(),
                 Select::make('location_id')
                     ->relationship('location', 'name')
-                    ->required(),
+                    ->required()
+                    ->disabledOn('edit')
+                    ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
                 Select::make('department_id')
                     ->relationship('department', 'name')
-                    ->required(),
+                    ->required()
+                    ->disabledOn('edit')
+                    ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
                 TextInput::make('pr_number'),
                 TextInput::make('po_number'),
-                TextInput::make('user_name'),
+                TextInput::make('user_name')
+                    ->label('Pemegang')
+                    ->disabledOn('edit')
+                    ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
                 TextInput::make('status')
                     ->required()
                     ->default('Idle'),

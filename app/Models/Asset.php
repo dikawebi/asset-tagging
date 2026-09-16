@@ -11,6 +11,12 @@ class Asset extends Model
 {
 
 use HasFactory;
+    /**
+     * Penanda internal: true saat update berasal dari sinkronisasi
+     * riwayat perpindahan (AssetHistory). Dipakai observer untuk
+     * menolak perubahan langsung di luar jalur mutasi.
+     */
+    public static bool $syncingFromHistory = false;
     protected $fillable = [
         'asset_id', // <--- PASTIKAN BARIS INI ADA DAN TERTULIS DENGAN BENAR
         'category_id',
@@ -62,7 +68,7 @@ use HasFactory;
         // Mengambil lokasi terakhir dari history jika ada,
         // jika tidak ada, ambil dari data awal (tabel assets)
         $lastHistory = $this->histories()->latest()->first();
-        return $lastHistory ? $lastHistory->keLokasi->name : ($this->location ? $this->location->name : 'Gudang');
+        return $lastHistory?->keLokasi?->name ?? ($this->location ? $this->location->name : 'Gudang');
     }
 
     public static function getEloquentQuery(): Builder

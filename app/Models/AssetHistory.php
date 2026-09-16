@@ -12,6 +12,42 @@ class AssetHistory extends Model
     'ke_departemen', 'user_lama', 'user_baru', 'keterangan'
 ];
 
+    protected static function booted(): void
+    {
+        // Setiap ada pencatatan baru, sinkronkan lokasi, departemen,
+        // dan pemegang ke data aset induknya.
+        static::created(function (AssetHistory $history): void {
+            $asset = $history->asset;
+            if (! $asset) {
+                return;
+            }
+
+            $sync = [];
+
+            if (is_numeric($history->ke_lokasi)) {
+                $sync['location_id'] = (int) $history->ke_lokasi;
+            }
+
+            if (is_numeric($history->ke_departemen)) {
+                $sync['department_id'] = (int) $history->ke_departemen;
+            }
+
+            $holder = trim((string) $history->user_baru);
+            if ($holder !== '' && $holder !== '-') {
+                $sync['user_name'] = $holder;
+            }
+
+            if ($sync !== []) {
+                Asset::$syncingFromHistory = true;
+                try {
+                    $asset->update($sync);
+                } finally {
+                    Asset::$syncingFromHistory = false;
+                }
+            }
+        });
+    }
+
     public function asset()
     {
         return $this->belongsTo(Asset::class);

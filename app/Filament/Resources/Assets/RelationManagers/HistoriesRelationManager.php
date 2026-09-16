@@ -21,9 +21,9 @@ class HistoriesRelationManager extends RelationManager
     $asset = $this->getOwnerRecord();
     $lastHistory = $asset->histories()->latest()->first();
 
-    // Tentukan nama lokasi lama
+    // Tentukan nama lokasi lama (kolom menyimpan ID; nilai non-numerik lama diabaikan aman)
     $lokasiLamaId = $lastHistory ? $lastHistory->ke_lokasi : $asset->location_id;
-    $lokasiLamaNama = Location::find($lokasiLamaId)?->name ?? 'Gudang';
+    $lokasiLamaNama = (is_numeric($lokasiLamaId) ? Location::find($lokasiLamaId)?->name : null) ?? 'Gudang';
 
     return $schema->schema([
         Forms\Components\TextInput::make('dari_lokasi_nama')
@@ -99,15 +99,7 @@ public function table(Table $table): Table
                 $data['user_lama'] = $lastHistory ? $lastHistory->user_baru : $asset->user_name;
 
                 return $data;
-    })
-                   // ->after(function ($record) {
-                   //     // Opsional: Update data di tabel Asset utama agar sinkron
-                   //     $asset = $this->getOwnerRecord();
-                   //     $asset->update([
-                   //         'location_id' => $record->ke_lokasi,
-                   //         'user_name' => $record->user_baru,
-                   //     ]);
-                   // }),
+            })
             ]);
     }
 }

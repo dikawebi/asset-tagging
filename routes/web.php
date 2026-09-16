@@ -53,3 +53,8 @@ Route::get('/', function () {
 
 
 });
+
+// Galeri preview varian branding + login (sementara, hapus sebelum production)
+Route::get('/preview-branding', function () {
+    return view('brand-preview');
+})->name('brand.preview');

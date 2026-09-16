@@ -9,6 +9,26 @@ use Illuminate\Validation\ValidationException;
 
 class AssetObserver
 {
+    public function updating(Asset $asset): void
+    {
+        // Lokasi, departemen, dan pemegang hanya boleh berubah
+        // melalui Catat Perpindahan Baru (sinkronisasi riwayat).
+        if (Asset::$syncingFromHistory) {
+            return;
+        }
+
+        $locked = array_intersect(
+            ['location_id', 'department_id', 'user_name'],
+            array_keys($asset->getDirty())
+        );
+
+        if ($locked !== []) {
+            throw ValidationException::withMessages([
+                'data.location_id' => 'Lokasi, departemen, dan pemegang hanya bisa diubah melalui Catat Perpindahan Baru pada tab Riwayat.',
+            ]);
+        }
+    }
+
     public function creating(Asset $asset): void
     {
         $user = Auth::user();

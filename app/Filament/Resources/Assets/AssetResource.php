@@ -19,14 +19,11 @@ use BackedEnum;
 use Filament\Forms\Components\Placeholder;
 // Tambahkan tanda '\' di depan semua import Filament
 
-use \Filament\Forms\Components\Repeater;
-use \Filament\Forms\Components\DatePicker;
-
 class AssetResource extends Resource
 {
     protected static ?string $model = Asset::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $recordTitleAttribute = 'Asset';
+    protected static ?string $recordTitleAttribute = 'asset_id';
 
     /**
      * 1. SKEMA FORM (CREATE & EDIT)
@@ -76,7 +73,8 @@ class AssetResource extends Resource
                         ->label('Serial Number'),
 
                     Select::make('status')
-                        ->options(['In use' => 'In use', 'Idle' => 'Idle', 'Broke' => 'Broke', 'Repair' => 'Repair', 'Lost' => 'Lost'])
+                        ->label('Status')
+                        ->options(['In use' => 'Dipakai', 'Idle' => 'Siaga', 'Repair' => 'Perbaikan', 'Broke' => 'Rusak', 'Lost' => 'Hilang'])
                         ->required(),
                 ]),
 
@@ -85,9 +83,24 @@ class AssetResource extends Resource
                 ->schema([
                     TextInput::make('pr_number')->label('Nomor PR'),
                     TextInput::make('po_number')->label('Nomor PO'),
-                    Select::make('location_id')->relationship('location', 'name')->required(),
-                    Select::make('department_id')->relationship('department', 'name')->required(),
-                    TextInput::make('user_name')->label('Pemegang')->columnSpanFull()->required(),
+                    Select::make('location_id')
+                        ->relationship('location', 'name')
+                        ->label('Lokasi')
+                        ->required()
+                        ->disabledOn('edit')
+                        ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
+                    Select::make('department_id')
+                        ->relationship('department', 'name')
+                        ->label('Departemen')
+                        ->required()
+                        ->disabledOn('edit')
+                        ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
+                    TextInput::make('user_name')
+                        ->label('Pemegang')
+                        ->columnSpanFull()
+                        ->required()
+                        ->disabledOn('edit')
+                        ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
                 ]),
 Section::make('Dokumentasi Foto Aset')
     ->schema([
@@ -118,8 +131,28 @@ Section::make('Dokumentasi Foto Aset')
                         ->schema([
                             \Filament\Infolists\Components\TextEntry::make('asset_id')->label('ID Aset')->weight('bold')->columnSpanFull(),
                             \Filament\Infolists\Components\TextEntry::make('brand.name')->label('Merek Aset')->columnSpanFull(),
-                            \Filament\Infolists\Components\TextEntry::make('name')->label('Nama Barang'),
-                            \Filament\Infolists\Components\TextEntry::make('status')->label('Status Kontrol')->badge(),
+                            \Filament\Infolists\Components\TextEntry::make('name')->label('Nama Barang')->placeholder('-'),
+                            \Filament\Infolists\Components\TextEntry::make('category.name')->label('Kategori')->placeholder('-'),
+                            \Filament\Infolists\Components\TextEntry::make('serial_number')->label('Serial Number')->placeholder('-'),
+                            \Filament\Infolists\Components\TextEntry::make('status')
+                                ->label('Status Kontrol')
+                                ->badge()
+                                ->color(fn (string $state): string => match ($state) {
+                                    'In use' => 'success',
+                                    'Idle' => 'info',
+                                    'Repair' => 'warning',
+                                    'Broke' => 'danger',
+                                    'Lost' => 'gray',
+                                    default => 'primary',
+                                })
+                                ->formatStateUsing(fn (string $state): string => match ($state) {
+                                    'In use' => 'Dipakai',
+                                    'Idle' => 'Siaga',
+                                    'Repair' => 'Perbaikan',
+                                    'Broke' => 'Rusak',
+                                    'Lost' => 'Hilang',
+                                    default => $state,
+                                }),
                             Grid::make(2)->schema([
                                 \Filament\Infolists\Components\TextEntry::make('pr_number')->label('Nomor PR')->placeholder('-'),
                                 \Filament\Infolists\Components\TextEntry::make('po_number')->label('Nomor PO')->placeholder('-'),
@@ -134,21 +167,6 @@ Section::make('Dokumentasi Foto Aset')
                         ->schema([
                             ViewField::make('qr_preview')->view('filament.forms.components.qr-preview'),
                             \Filament\Infolists\Components\ImageEntry::make('images')->label('Foto Fisik'),
-                        ]),
-
-                        // Tambahkan ini di dalam Schema di AssetResource.php
-                    Section::make('Riwayat Perubahan & Perpindahan')
-                        ->schema([
-                            \Filament\Forms\Components\Repeater::make('histories')
-                                ->relationship('histories') // Pastikan model Asset punya relasi 'histories'
-                                ->schema([
-                                    \Filament\Forms\Components\DatePicker::make('date')->required(),
-                                    \Filament\Forms\Components\TextInput::make('description')->required(),
-                                    \Filament\Forms\Components\TextInput::make('old_location'),
-                                    \Filament\Forms\Components\TextInput::make('new_location'),
-                                ])
-                                ->columns(2)
-                                ->collapsible(),
                         ]),
                 ]),
         ]);
@@ -169,16 +187,47 @@ Section::make('Dokumentasi Foto Aset')
             TextColumn::make('department.name')->label('Dept')->searchable()->sortable(),
             TextColumn::make('user_name')->label('Pengguna')->searchable()->sortable(),
             TextColumn::make('status')
+            ->label('Status')
             ->sortable()
             ->searchable()
               ->badge()
               ->color(fn (string $state): string => match ($state) {
                 'In use' => 'success',
-                'Idle' => 'warning',
+                'Idle' => 'info',
+                'Repair' => 'warning',
                 'Broke' => 'danger',
+                'Lost' => 'gray',
+                default => 'primary',
+              })
+              ->formatStateUsing(fn (string $state): string => match ($state) {
+                'In use' => 'Dipakai',
+                'Idle' => 'Siaga',
+                'Repair' => 'Perbaikan',
+                'Broke' => 'Rusak',
+                'Lost' => 'Hilang',
+                default => $state,
               }),
                   ])
+                  ->filters([
+                    \Filament\Tables\Filters\SelectFilter::make('status')
+                        ->label('Status')
+                        ->options(['In use' => 'Dipakai', 'Idle' => 'Siaga', 'Repair' => 'Perbaikan', 'Broke' => 'Rusak', 'Lost' => 'Hilang'])
+                        ->placeholder('Semua status'),
+                    \Filament\Tables\Filters\SelectFilter::make('category')
+                        ->label('Kategori')
+                        ->relationship('category', 'name')
+                        ->placeholder('Semua kategori'),
+                    \Filament\Tables\Filters\SelectFilter::make('location')
+                        ->label('Lokasi')
+                        ->relationship('location', 'name')
+                        ->placeholder('Semua lokasi'),
+                    \Filament\Tables\Filters\SelectFilter::make('department')
+                        ->label('Departemen')
+                        ->relationship('department', 'name')
+                        ->placeholder('Semua departemen'),
+                  ])
                   ->actions([
+                            ViewAction::make(),
                             EditAction::make(),
                             DeleteAction::make(),
                             ButtonAction::make('print_qr')
@@ -193,11 +242,11 @@ Section::make('Dokumentasi Foto Aset')
                                 ->label('Cetak QR Terpilih')
                                 ->icon('heroicon-o-printer')
                                 ->color('success')
-                                ->action(function (Collection $records) {
-                                    $ids = $records->pluck('id')->implode(',');
-                                    // Pastikan nama rute di sini SAMA dengan yang di web.php
-                                    return redirect()->route('asset.print-qr-bulk', ['ids' => $ids]);
-                                }),
+                                ->url(fn (Collection $records): ?string => $records->isNotEmpty()
+                                    ? route('asset.print-qr-bulk', ['ids' => $records->pluck('id')->implode(',')])
+                                    : null)
+                                ->openUrlInNewTab()
+                                ->deselectRecordsAfterCompletion(),
                             DeleteBulkAction::make(),
                   ]);
     }

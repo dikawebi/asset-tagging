@@ -32,6 +32,15 @@ class ScanAsset extends Page
         $asset = Asset::where('asset_id', $assetId)->first();
 
         if ($asset) {
+            // Catat pemindaian ke riwayat agar terpantau siapa & kapan.
+            // Kolom lokasi/departemen menyimpan ID (relasi BelongsTo), bukan nama.
+            $asset->histories()->create([
+                'ke_lokasi' => (string) $asset->location_id,
+                'ke_departemen' => (string) $asset->department_id,
+                'user_baru' => $asset->user_name ?? '-',
+                'keterangan' => 'Dipindai via Scanner oleh ' . (filament()->auth()->user()?->name ?? 'pengguna'),
+            ]);
+
             Notification::make()
                 ->title('Aset Berhasil Terdeteksi!')
                 ->body("Membuka data: {$asset->name}")
