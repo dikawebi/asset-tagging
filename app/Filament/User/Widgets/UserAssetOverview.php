@@ -16,23 +16,23 @@ class UserAssetOverview extends BaseWidget
         // Menghitung seluruh aset global di database
         $totalAset = Asset::count();
         $asetDigunakan = Asset::where('status', 'In use')->count();
-        $asetRusak = Asset::where('status', 'Broke')->count();
+        $brokenAssets = Asset::where('status', 'Broke')->count();
 
         return [
-            Stat::make('Total Semua Aset', $totalAset . ' Unit')
-                ->description('Semua aset yang tercatat di sistem')
+            Stat::make('Total Assets', $totalAset . ' Units')
+                ->description('All assets recorded in the system')
                 ->descriptionIcon('heroicon-m-cube')
                 ->color('info'),
 
-            Stat::make('Aset Aktif Digunakan', $asetDigunakan . ' Unit')
-                ->description('Sedang digunakan operasional')
+            Stat::make('Assets In Use', $asetDigunakan . ' Units')
+                ->description('Currently in operational use')
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color('success'),
 
-            Stat::make('Aset Rusak', $asetRusak . ' Unit')
-                ->description('Butuh tindakan/perbaikan segera')
+            Stat::make('Broken Assets', $brokenAssets . ' Units')
+                ->description('Need immediate action/repair')
                 ->descriptionIcon('heroicon-m-x-circle')
-                ->color($asetRusak > 0 ? 'danger' : 'gray'),
+                ->color($brokenAssets > 0 ? 'danger' : 'gray'),
         ];
     }
 }

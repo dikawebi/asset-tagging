@@ -13,36 +13,36 @@ class AssetStatsOverview extends BaseWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Total Aset', Asset::count())
-                ->description('Seluruh aset terdaftar')
+            Stat::make('Total Assets', Asset::count())
+                ->description('All registered assets')
                 ->descriptionIcon('heroicon-m-squares-2x2')
                 ->icon('heroicon-m-squares-2x2')
                 ->color('primary')
                 ->chart($this->monthlyTrend()),
 
-            Stat::make('Dipakai', Asset::where('status', 'In use')->count())
-                ->description('Barang sedang dipakai')
+            Stat::make('In Use', Asset::where('status', 'In use')->count())
+                ->description('Items currently in use')
                 ->icon('heroicon-m-check-circle')
                 ->color('success'),
 
-            Stat::make('Siaga', Asset::where('status', 'Idle')->count())
-                ->description('Barang tersedia / standby')
+            Stat::make('Idle', Asset::where('status', 'Idle')->count())
+                ->description('Available / standby items')
                 ->icon('heroicon-m-pause-circle')
                 ->color('info'),
 
-            Stat::make('Perbaikan', Asset::where('status', 'Repair')->count())
-                ->description('Sedang dalam perbaikan')
+            Stat::make('Repair', Asset::where('status', 'Repair')->count())
+                ->description('Currently under repair')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->icon('heroicon-m-wrench-screwdriver')
                 ->color('warning'),
 
-            Stat::make('Rusak', Asset::where('status', 'Broke')->count())
-                ->description('Kondisi rusak')
+            Stat::make('Broke', Asset::where('status', 'Broke')->count())
+                ->description('Broken condition')
                 ->icon('heroicon-m-x-circle')
                 ->color('danger'),
 
-            Stat::make('Hilang', Asset::where('status', 'Lost')->count())
-                ->description('Aset hilang')
+            Stat::make('Lost', Asset::where('status', 'Lost')->count())
+                ->description('Lost assets')
                 ->icon('heroicon-m-question-mark-circle')
                 ->color('gray'),
         ];

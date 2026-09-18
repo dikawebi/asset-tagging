@@ -7,14 +7,14 @@ use App\Models\Asset;
 
 class AssetStatusChart extends ChartWidget
 {
-    protected ?string $heading = 'Status Aset';
+    protected ?string $heading = 'Asset Status';
 
     protected function getData(): array
     {
         return [
             'datasets' => [
                 [
-                    'label' => 'Jumlah aset',
+                    'label' => 'Number of assets',
                     'data' => [
                         Asset::where('status', 'In use')->count(),
                         Asset::where('status', 'Idle')->count(),
@@ -27,7 +27,7 @@ class AssetStatusChart extends ChartWidget
                     'borderColor' => '#ffffff',
                 ],
             ],
-            'labels' => ['Dipakai', 'Siaga', 'Perbaikan', 'Rusak', 'Hilang'],
+            'labels' => ['In Use', 'Idle', 'Repair', 'Broke', 'Lost'],
         ];
     }
 

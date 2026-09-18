@@ -6,6 +6,7 @@ use App\Filament\Resources\Assets\Pages\{CreateAsset, EditAsset, ListAssets, Vie
 use App\Models\{Asset, AssetSequence};
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\{Section, Grid};
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\{TextInput, Select, FileUpload, ViewField};
 use Filament\Resources\Resource;
 use Filament\Tables\{Table, Tables};
@@ -52,6 +53,7 @@ class AssetResource extends Resource
                         ->label('')
                         ->content(fn () => AssetSequence::where('department_id', Auth::user()->department_id)->exists()
                             ? '✅ Sequence siap.' : '⚠️ Perhatian: Sequence belum diatur.')
+                        ->hiddenOn('view')
                         ->columnSpanFull(),
 
                     Select::make('category_id')
@@ -74,7 +76,7 @@ class AssetResource extends Resource
 
                     Select::make('status')
                         ->label('Status')
-                        ->options(['In use' => 'Dipakai', 'Idle' => 'Siaga', 'Repair' => 'Perbaikan', 'Broke' => 'Rusak', 'Lost' => 'Hilang'])
+                        ->options(['In use' => 'In Use', 'Idle' => 'Idle', 'Repair' => 'Repair', 'Broke' => 'Broke', 'Lost' => 'Lost'])
                         ->required(),
                 ]),
 
@@ -109,6 +111,25 @@ Section::make('Dokumentasi Foto Aset')
             ->view('filament.forms.components.custom-mobile-camera')
             ->label('Ambil Foto Aset')
             ->helperText('Klik tombol di bawah untuk membuka kamera HP.')
+            ->hiddenOn('view'),
+        // Tampilan read-only khusus halaman view (tata letak sama seperti form edit).
+        // content() mengembalikan View (Htmlable) agar HTML tidak disanitasi.
+        Placeholder::make('images_gallery')
+            ->label('Foto Fisik Aset')
+            ->content(fn (Get $get) => view('filament.forms.components.asset-images-view', [
+                'images' => $get('images'),
+            ]))
+            ->html()
+            ->visibleOn('view')
+            ->columnSpanFull(),
+    ]),
+Section::make('Label QR Code')
+    ->visibleOn('view')
+    ->schema([
+        ViewField::make('qr_preview')
+            ->view('filament.forms.components.qr-preview')
+            ->label('QR Code Aset')
+            ->columnSpanFull(),
     ]),
         ]);
     }
@@ -117,60 +138,13 @@ Section::make('Dokumentasi Foto Aset')
 
     /**
      * 2. SKEMA INFOLIST (VIEW DETAIL)
+     *
+     * Sengaja tidak didefinisikan: halaman view memakai skema form yang sama
+     * seperti halaman edit, dan framework otomatis me-render-nya dalam
+     * keadaan disabled (view-only). Komponen yang hanya relevan untuk
+     * create/edit disembunyikan via ->hiddenOn('view'), sedangkan komponen
+     * khusus view ditandai ->visibleOn('view').
      */
-    public static function infolist(Schema $schema): Schema
-    {
-        return $schema->schema([
-            Section::make()
-                ->columns(3)
-                ->schema([
-                    Section::make('Informasi Utama Aset')
-                        ->icon('heroicon-m-identification')
-                        ->columnSpan(2)
-                        ->compact()
-                        ->schema([
-                            \Filament\Infolists\Components\TextEntry::make('asset_id')->label('ID Aset')->weight('bold')->columnSpanFull(),
-                            \Filament\Infolists\Components\TextEntry::make('brand.name')->label('Merek Aset')->columnSpanFull(),
-                            \Filament\Infolists\Components\TextEntry::make('name')->label('Nama Barang')->placeholder('-'),
-                            \Filament\Infolists\Components\TextEntry::make('category.name')->label('Kategori')->placeholder('-'),
-                            \Filament\Infolists\Components\TextEntry::make('serial_number')->label('Serial Number')->placeholder('-'),
-                            \Filament\Infolists\Components\TextEntry::make('status')
-                                ->label('Status Kontrol')
-                                ->badge()
-                                ->color(fn (string $state): string => match ($state) {
-                                    'In use' => 'success',
-                                    'Idle' => 'info',
-                                    'Repair' => 'warning',
-                                    'Broke' => 'danger',
-                                    'Lost' => 'gray',
-                                    default => 'primary',
-                                })
-                                ->formatStateUsing(fn (string $state): string => match ($state) {
-                                    'In use' => 'Dipakai',
-                                    'Idle' => 'Siaga',
-                                    'Repair' => 'Perbaikan',
-                                    'Broke' => 'Rusak',
-                                    'Lost' => 'Hilang',
-                                    default => $state,
-                                }),
-                            Grid::make(2)->schema([
-                                \Filament\Infolists\Components\TextEntry::make('pr_number')->label('Nomor PR')->placeholder('-'),
-                                \Filament\Infolists\Components\TextEntry::make('po_number')->label('Nomor PO')->placeholder('-'),
-                                \Filament\Infolists\Components\TextEntry::make('location.name')->label('Lokasi Penempatan'),
-                                \Filament\Infolists\Components\TextEntry::make('department.name')->label('Departemen Pemilik'),
-                            ]),
-                            \Filament\Infolists\Components\TextEntry::make('user_name')->label('Pemegang')->columnSpanFull(),
-                        ]),
-
-                    Section::make('Label & Foto')
-                        ->columnSpan(1)
-                        ->schema([
-                            ViewField::make('qr_preview')->view('filament.forms.components.qr-preview'),
-                            \Filament\Infolists\Components\ImageEntry::make('images')->label('Foto Fisik'),
-                        ]),
-                ]),
-        ]);
-    }
 
 
      // 3. TABLE SCHEMA
@@ -200,19 +174,19 @@ Section::make('Dokumentasi Foto Aset')
                 default => 'primary',
               })
               ->formatStateUsing(fn (string $state): string => match ($state) {
-                'In use' => 'Dipakai',
-                'Idle' => 'Siaga',
-                'Repair' => 'Perbaikan',
-                'Broke' => 'Rusak',
-                'Lost' => 'Hilang',
+                'In use' => 'In Use',
+                'Idle' => 'Idle',
+                'Repair' => 'Repair',
+                'Broke' => 'Broke',
+                'Lost' => 'Lost',
                 default => $state,
               }),
                   ])
                   ->filters([
                     \Filament\Tables\Filters\SelectFilter::make('status')
                         ->label('Status')
-                        ->options(['In use' => 'Dipakai', 'Idle' => 'Siaga', 'Repair' => 'Perbaikan', 'Broke' => 'Rusak', 'Lost' => 'Hilang'])
-                        ->placeholder('Semua status'),
+                        ->options(['In use' => 'In Use', 'Idle' => 'Idle', 'Repair' => 'Repair', 'Broke' => 'Broke', 'Lost' => 'Lost'])
+                        ->placeholder('All statuses'),
                     \Filament\Tables\Filters\SelectFilter::make('category')
                         ->label('Kategori')
                         ->relationship('category', 'name')

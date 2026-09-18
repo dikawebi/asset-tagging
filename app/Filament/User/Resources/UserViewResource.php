@@ -101,9 +101,9 @@ class UserViewResource extends Resource
                                 Select::make('status')
                                     ->label('Status Kontrol')
                                     ->options([
-                                        'In use' => 'In use (Aktif Digunakan)',
-                                        'Idle' => 'Idle (Tersedia di Gudang)',
-                                        'Broke' => 'Broke (Rusak / Butuh Perbaikan)',
+                                        'In use' => 'In Use',
+                                        'Idle' => 'Idle',
+                                        'Broke' => 'Broke',
                                     ])
                                     ->native(false)
                                     ->required(),

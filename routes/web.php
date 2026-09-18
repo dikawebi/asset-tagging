@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetPrintController;
 use App\Models\Asset;
+use App\Services\AssetStagingService;
 use Illuminate\Http\Request;
 
 // 🚀 TEMPORARY DEPLOYMENT TRIGGER ROUTE:
@@ -27,6 +28,15 @@ Route::get('/run-migration-safely', function () {
 });
 
 Route::get('/asset/print-qr/{id}', [AssetPrintController::class, 'print'])->name('asset.print-qr');
+
+// Template CSV untuk staging registrasi aset (Kasus 2: assign berurutan ke dummy).
+Route::get('/staging/template.csv', function (AssetStagingService $service) {
+    return response()->streamDownload(
+        fn () => print($service->templateCsv()),
+        'sysinfo-template.csv',
+        ['Content-Type' => 'text/csv; charset=UTF-8']
+    );
+})->middleware(['auth'])->name('staging.template');
 
 // 💡 ENDPOINT API JEMBATAN TRANSLASI STRING KODE KE ID INTEGER DATABASE
 Route::get('/api/get-asset-id-by-code', function (Request $request) {

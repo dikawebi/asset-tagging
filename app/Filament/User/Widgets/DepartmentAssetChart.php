@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 
 class DepartmentAssetChart extends ChartWidget
 {
-    protected ?string $heading = 'Proporsi Status Kondisi Semua Aset';
+    protected ?string $heading = 'Overall Asset Status Proportion';
     protected static ?int $sort = 2;
     protected int|string|array $columnSpan = 1;
 
@@ -26,7 +26,7 @@ class DepartmentAssetChart extends ChartWidget
         if ($inUse === 0 && $broke === 0 && $idle === 0) {
             return [
                 'datasets' => [['data' => [1], 'backgroundColor' => ['#f3f4f6']]],
-                'labels' => ['Belum Ada Data Aset'],
+                'labels' => ['No Asset Data'],
             ];
         }
 
@@ -37,7 +37,7 @@ class DepartmentAssetChart extends ChartWidget
                     'backgroundColor' => ['#22c55e', '#ef4444', '#eab308'],
                 ],
             ],
-            'labels' => ['Siap Digunakan', 'Rusak', 'Tersedia (Idle)'],
+            'labels' => ['In Use', 'Broke', 'Idle'],
         ];
     }
 }

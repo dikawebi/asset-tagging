@@ -57,11 +57,11 @@ class AssetsTable
                         default => 'primary',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'In use' => 'Dipakai',
-                        'Idle' => 'Siaga',
-                        'Repair' => 'Perbaikan',
-                        'Broke' => 'Rusak',
-                        'Lost' => 'Hilang',
+                        'In use' => 'In Use',
+                        'Idle' => 'Idle',
+                        'Repair' => 'Repair',
+                        'Broke' => 'Broke',
+                        'Lost' => 'Lost',
                         default => $state,
                     })
                     ->searchable(),
@@ -80,13 +80,13 @@ class AssetsTable
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([
-                        'In use' => 'Dipakai',
-                        'Idle' => 'Siaga',
-                        'Repair' => 'Perbaikan',
-                        'Broke' => 'Rusak',
-                        'Lost' => 'Hilang',
+                        'In use' => 'In Use',
+                        'Idle' => 'Idle',
+                        'Repair' => 'Repair',
+                        'Broke' => 'Broke',
+                        'Lost' => 'Lost',
                     ])
-                    ->placeholder('Semua status'),
+                    ->placeholder('All statuses'),
                 SelectFilter::make('category')
                     ->label('Kategori')
                     ->relationship('category', 'name')

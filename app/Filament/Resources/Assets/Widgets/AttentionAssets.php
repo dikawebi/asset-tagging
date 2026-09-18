@@ -15,8 +15,8 @@ class AttentionAssets extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->heading('Perlu Perhatian')
-            ->description('Aset dalam perbaikan, rusak, atau hilang')
+            ->heading('Needs Attention')
+            ->description('Assets under repair, broken, or lost')
             ->query(
                 Asset::query()
                     ->whereIn('status', ['Repair', 'Broke', 'Lost'])
