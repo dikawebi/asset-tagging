@@ -542,3 +542,13 @@
         transition: none;
     }
 }
+
+/* ===== Tabel staging: sel lebih padat agar 14 kolom muat tanpa scroll ===== */
+.fi-resource-relation-manager .fi-ta-cell {
+    padding-inline: 0.5rem;
+}
+
+.fi-resource-relation-manager .fi-ta-cell .fi-input,
+.fi-resource-relation-manager .fi-ta-cell .fi-select-input {
+    min-width: 0;
+}

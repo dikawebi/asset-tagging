@@ -60,7 +60,7 @@ class AssetStagingService
         'brand' => ['brand', 'merk', 'merek', 'manufacturer', 'pabrikan'],
         'processor' => ['processor', 'prosesor', 'cpu', 'chipset'],
         'memory' => ['memory', 'memori', 'ram', 'memoriram'],
-        'storage' => ['storage', 'penyimpanan', 'disk', 'harddisk', 'ssd', 'hdd'],
+        'storage' => ['storage', 'penyimpanan', 'disk', 'harddisk', 'ssd', 'hdd', 'kapasitas', 'capacity', 'totalkapasitas', 'totalcapacity', 'kapasitaspenyimpanan', 'totalkapasitaspenyimpanan'],
     ];
 
     /**

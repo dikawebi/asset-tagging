@@ -389,6 +389,23 @@ class StagingCommitTest extends TestCase
         $this->assertSame('256GB SSD', $data['storage']);
     }
 
+    public function test_storage_accepts_capacity_alias()
+    {
+        $csv = implode("\n", [
+            'Nomor Seri,Tipe,Merk,Total Kapasitas Penyimpanan',
+            'SN020,ThinkPad T14,Lenovo,1TB SSD',
+        ]);
+
+        $service = app(AssetStagingService::class);
+        $batch = $this->makeBatch();
+        $service->parseUpload($batch, $this->putCsv('l.csv', $csv));
+
+        $this->assertSame(1, $batch->refresh()->valid_rows);
+
+        $data = $batch->rows()->first()->data;
+        $this->assertSame('1TB SSD', $data['storage']);
+    }
+
     public function test_commit_aborts_when_pool_is_short()
     {
         $this->makeDummy();

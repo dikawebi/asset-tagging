@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Enums\Width;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 
@@ -17,6 +18,12 @@ class ViewStagingBatch extends ViewRecord
     protected static string $resource = StagingBatchResource::class;
 
     protected static ?string $title = 'Preview Staging';
+
+    /**
+     * Konten full-width: tabel 14 kolom butuh ruang agar tidak scroll
+     * horizontal.
+     */
+    protected Width | string | null $maxContentWidth = Width::Full;
 
     /**
      * Dipicu setiap ada edit inline di tabel baris: render ulang halaman
