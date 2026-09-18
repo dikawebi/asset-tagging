@@ -30,6 +30,12 @@ class AssetForm
                     ->required()
                     ->disabledOn('edit')
                     ->helperText('Terkunci. Ubah hanya via Catat Perpindahan Baru pada tab Riwayat.'),
+                TextInput::make('processor')
+                    ->label('Prosesor'),
+                TextInput::make('memory')
+                    ->label('Memori / RAM'),
+                TextInput::make('storage')
+                    ->label('Penyimpanan'),
                 TextInput::make('pr_number'),
                 TextInput::make('po_number'),
                 TextInput::make('user_name')

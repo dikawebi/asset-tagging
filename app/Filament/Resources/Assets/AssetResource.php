@@ -74,6 +74,18 @@ class AssetResource extends Resource
                         ->required()
                         ->label('Serial Number'),
 
+                    TextInput::make('processor')
+                        ->label('Prosesor')
+                        ->placeholder('cth: Intel Core i7-1355U'),
+
+                    TextInput::make('memory')
+                        ->label('Memori / RAM')
+                        ->placeholder('cth: 16GB DDR4'),
+
+                    TextInput::make('storage')
+                        ->label('Penyimpanan')
+                        ->placeholder('cth: 512GB SSD'),
+
                     Select::make('status')
                         ->label('Status')
                         ->options(['In use' => 'In Use', 'Idle' => 'Idle', 'Repair' => 'Repair', 'Broke' => 'Broke', 'Lost' => 'Lost'])
@@ -160,6 +172,9 @@ Section::make('Label QR Code')
             TextColumn::make('location.name')->label('Lokasi')->searchable()->sortable(),
             TextColumn::make('department.name')->label('Dept')->searchable()->sortable(),
             TextColumn::make('user_name')->label('Pengguna')->searchable()->sortable(),
+            TextColumn::make('processor')->label('Prosesor')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('memory')->label('Memori')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('storage')->label('Penyimpanan')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('status')
             ->label('Status')
             ->sortable()

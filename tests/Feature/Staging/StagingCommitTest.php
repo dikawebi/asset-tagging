@@ -280,8 +280,113 @@ class StagingCommitTest extends TestCase
         $this->assertSame('K8N0CV13J45935E', $data['serial_number']);
         $this->assertSame('ZenBook UX433FN', $data['model']);
         $this->assertSame($asus->id, $data['brand_id']);
+        // 'Memori RAM' kini dikenali sebagai alias kolom memory (bukan extra).
+        $this->assertSame('16.00 GB', $data['memory']);
         $this->assertSame('LAPTOP-LSTK1LV3', $data['extras']['Nama Perangkat']);
-        $this->assertSame('16.00 GB', $data['extras']['Memori RAM']);
+        $this->assertArrayNotHasKey('Memori RAM', $data['extras']);
+    }
+
+    public function test_unknown_brand_error_suggests_closest_master()
+    {
+        $csv = implode("\n", [
+            'serial_number,model,brand',
+            'SN001,ThinkPad T14,Lenovo',
+            'SN002,ThinkPad T15,Lenpvo',
+            'SN003,ThinkPad X1,MerekFiktif',
+        ]);
+
+        $service = app(AssetStagingService::class);
+        $batch = $this->makeBatch();
+        $service->parseUpload($batch, $this->putCsv('h.csv', $csv));
+
+        // Salah ketik dekat -> error menyebut kandidat terdekat.
+        $typo = $batch->rows()->where('row_number', 3)->first();
+        $this->assertSame('invalid', $typo->status);
+        $this->assertStringContainsString("brand 'Lenpvo' tidak dikenal", $typo->error_message);
+        $this->assertStringContainsString("'Lenovo'", $typo->error_message);
+
+        // Sama sekali tidak mirip -> tanpa saran, tapi ada arahan tambah master.
+        $alien = $batch->rows()->where('row_number', 4)->first();
+        $this->assertSame('invalid', $alien->status);
+        $this->assertStringContainsString('master brand', $alien->error_message);
+    }
+
+    public function test_create_brand_from_row_registers_master_and_revalidates()
+    {
+        $csv = implode("\n", [
+            'serial_number,model,brand',
+            'SN001,ThinkPad T14,Acer',
+        ]);
+
+        $service = app(AssetStagingService::class);
+        $batch = $this->makeBatch();
+        $service->parseUpload($batch, $this->putCsv('i.csv', $csv));
+
+        $row = $batch->rows()->first();
+        $this->assertSame('invalid', $row->status);
+
+        $service->createBrandFromRow($row);
+
+        $brand = Brand::where('name', 'Acer')->first();
+        $this->assertNotNull($brand);
+
+        $row->refresh();
+        $this->assertSame('valid', $row->status);
+        $this->assertSame($brand->id, $row->data['brand_id']);
+        $this->assertSame(1, $batch->refresh()->valid_rows);
+
+        // Idempotent: dipanggil lagi tidak bikin duplikat.
+        $service->createBrandFromRow($row->refresh());
+        $this->assertSame(1, Brand::where('name', 'Acer')->count());
+    }
+
+    public function test_spec_columns_flow_from_csv_to_asset()
+    {
+        $this->makeDummy();
+        $this->makeDummy();
+
+        $csv = implode("\n", [
+            'serial_number,model,brand,processor,memory,storage',
+            'SN001,ThinkPad T14,Lenovo,Intel Core i7-1355U,16GB DDR4,512GB SSD',
+            'SN002,Ideapad Slim 3,Lenovo,,,',
+        ]);
+
+        $service = app(AssetStagingService::class);
+        $batch = $this->makeBatch();
+        $service->parseUpload($batch, $this->putCsv('j.csv', $csv));
+
+        $this->assertSame(2, $batch->refresh()->valid_rows);
+
+        $service->commit($batch);
+
+        $first = Asset::where('serial_number', 'SN001')->first();
+        $this->assertSame('Intel Core i7-1355U', $first->processor);
+        $this->assertSame('16GB DDR4', $first->memory);
+        $this->assertSame('512GB SSD', $first->storage);
+
+        $second = Asset::where('serial_number', 'SN002')->first();
+        $this->assertSame('', $second->processor);
+        $this->assertSame('', $second->memory);
+        $this->assertSame('', $second->storage);
+    }
+
+    public function test_spec_columns_accept_indonesian_aliases()
+    {
+        $csv = implode("\n", [
+            'Nomor Seri,Tipe,Merk,Prosesor,Memori,Penyimpanan',
+            'SN010,ThinkPad T14,Lenovo,Ryzen 5 7530U,8GB DDR4,256GB SSD',
+        ]);
+
+        $service = app(AssetStagingService::class);
+        $batch = $this->makeBatch();
+        $service->parseUpload($batch, $this->putCsv('k.csv', $csv));
+
+        $this->assertSame(1, $batch->refresh()->valid_rows);
+
+        $data = $batch->rows()->first()->data;
+        $this->assertSame('Ryzen 5 7530U', $data['processor']);
+        $this->assertSame('8GB DDR4', $data['memory']);
+        $this->assertSame('256GB SSD', $data['storage']);
     }
 
     public function test_commit_aborts_when_pool_is_short()

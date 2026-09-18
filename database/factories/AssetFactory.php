@@ -30,6 +30,12 @@ class AssetFactory extends Factory
             'location_id' => Location::inRandomOrder()->first()?->id ?? 1,
             'department_id' => Department::inRandomOrder()->first()?->id ?? 1,
 
+            'processor' => $this->faker->randomElement([
+                'Intel Core i5-1335U', 'Intel Core i7-1355U', 'AMD Ryzen 5 7530U', 'Apple M3',
+            ]),
+            'memory' => $this->faker->randomElement(['8GB DDR4', '16GB DDR4', '16GB DDR5', '32GB DDR5']),
+            'storage' => $this->faker->randomElement(['256GB SSD', '512GB SSD', '1TB SSD', '1TB HDD']),
+
             'pr_number' => 'PR-' . $this->faker->numberBetween(2026001, 2026999),
             'po_number' => 'PO-' . $this->faker->numberBetween(2026001, 2026999),
             'user_name' => $this->faker->name(),

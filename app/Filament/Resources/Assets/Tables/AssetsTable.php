@@ -45,6 +45,18 @@ class AssetsTable
                 TextColumn::make('user_name')
                     ->label('Pengguna')
                     ->searchable(),
+                TextColumn::make('processor')
+                    ->label('Prosesor')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('memory')
+                    ->label('Memori')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('storage')
+                    ->label('Penyimpanan')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()

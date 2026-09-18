@@ -25,6 +25,15 @@ class AssetInfolist
                     ->placeholder('-'),
                 TextEntry::make('user_name')
                     ->placeholder('-'),
+                TextEntry::make('processor')
+                    ->label('Prosesor')
+                    ->placeholder('-'),
+                TextEntry::make('memory')
+                    ->label('Memori')
+                    ->placeholder('-'),
+                TextEntry::make('storage')
+                    ->label('Penyimpanan')
+                    ->placeholder('-'),
                 TextEntry::make('status'),
                 TextEntry::make('images')
                     ->placeholder('-')

@@ -7,19 +7,33 @@ use App\Models\Department;
 use App\Models\Location;
 use App\Models\StagingRow;
 use App\Services\AssetStagingService;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Livewire\Attributes\On;
 
 class StagingRowsRelationManager extends RelationManager
 {
     protected static string $relationship = 'rows';
 
     protected static ?string $title = 'Baris CSV';
+
+    /**
+     * Dipicu setelah Commit Assign: render ulang tabel agar status
+     * assigned + nomor aset langsung tampil (siap cetak QR).
+     */
+    #[On('staging-committed')]
+    public function refreshAfterCommit(): void
+    {
+        // Kosong disengaja: menangani event saja sudah me-render ulang.
+    }
 
     public function form(Schema $schema): Schema
     {
@@ -36,15 +50,20 @@ class StagingRowsRelationManager extends RelationManager
             ->updateRowAssignment($record, [$key => $state])
             ->data[$key] ?? null;
 
-        $manualText = function (string $key, string $label) use ($locked, $save): TextInputColumn {
+        // Setiap perubahan nilai kolom memicu refresh halaman induk
+        // (tombol Commit Assign + ringkasan ikut mutakhir tanpa reload manual).
+        $notifyParent = fn (Column $column): mixed => $column->getLivewire()->dispatch('staging-row-saved');
+
+        $manualText = function (string $key, string $label) use ($locked, $save, $notifyParent): TextInputColumn {
             return TextInputColumn::make("row_{$key}")
                 ->label($label)
                 ->getStateUsing(fn (StagingRow $record): string => (string) ($record->data[$key] ?? ''))
                 ->updateStateUsing(fn (StagingRow $record, $state) => $save($record, $key, trim((string) $state)))
+                ->afterStateUpdated($notifyParent)
                 ->disabled($locked);
         };
 
-        $manualSelect = function (string $key, string $label, string $modelClass) use ($locked, $save): SelectColumn {
+        $manualSelect = function (string $key, string $label, string $modelClass) use ($locked, $save, $notifyParent): SelectColumn {
             return SelectColumn::make("row_{$key}")
                 ->label($label)
                 ->options($modelClass::pluck('name', 'id'))
@@ -55,6 +74,7 @@ class StagingRowsRelationManager extends RelationManager
                     $key,
                     $state !== null && $state !== '' ? (int) $state : null
                 ))
+                ->afterStateUpdated($notifyParent)
                 ->disabled($locked);
         };
 
@@ -64,6 +84,9 @@ class StagingRowsRelationManager extends RelationManager
                 $manualText('serial_number', 'Serial'),
                 $manualText('model', 'Model'),
                 $manualText('brand', 'Brand'),
+                $manualText('processor', 'Prosesor'),
+                $manualText('memory', 'Memori'),
+                $manualText('storage', 'Storage'),
                 $manualSelect('location_id', 'Lokasi', Location::class),
                 $manualSelect('department_id', 'Departemen', Department::class),
                 $manualSelect('category_id', 'Kategori', Category::class),
@@ -97,6 +120,37 @@ class StagingRowsRelationManager extends RelationManager
                     ]),
             ])
             ->headerActions([])
-            ->actions([]);
+            ->actions([
+                Action::make('add_brand')
+                    ->label('Tambah ke master')
+                    ->icon('heroicon-m-plus-circle')
+                    ->color('success')
+                    ->visible(function (StagingRow $record): bool {
+                        if ($record->status !== StagingRow::STATUS_INVALID) {
+                            return false;
+                        }
+
+                        $brand = trim((string) ($record->data['brand'] ?? ''));
+
+                        return $brand !== ''
+                            && str_contains((string) $record->error_message, 'tidak dikenal');
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (StagingRow $record): string => "Tambahkan brand '".trim((string) $record->data['brand'])."' ke master?")
+                    ->modalDescription('Brand baru langsung dipakai untuk validasi ulang baris ini.')
+                    ->modalSubmitActionLabel('Ya, tambahkan')
+                    ->action(function (StagingRow $record): void {
+                        $brand = trim((string) ($record->data['brand'] ?? ''));
+
+                        app(AssetStagingService::class)->createBrandFromRow($record);
+
+                        Notification::make()
+                            ->success()
+                            ->title("Brand '{$brand}' ditambahkan ke master")
+                            ->body('Baris ini sudah divalidasi ulang otomatis.')
+                            ->send();
+                    })
+                    ->after(fn ($livewire) => $livewire->dispatch('staging-row-saved')),
+            ]);
     }
 }

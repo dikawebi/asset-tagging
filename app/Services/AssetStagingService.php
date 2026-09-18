@@ -39,6 +39,9 @@ class AssetStagingService
         'serial_number',
         'model',
         'brand',
+        'processor',
+        'memory',
+        'storage',
     ];
 
     public const REQUIRED_HEADERS = [
@@ -55,6 +58,9 @@ class AssetStagingService
         'serial_number' => ['serialnumber', 'nomorseri', 'serial', 'sn', 'servicetag'],
         'model' => ['model', 'tipe', 'tipemodel', 'type', 'product'],
         'brand' => ['brand', 'merk', 'merek', 'manufacturer', 'pabrikan'],
+        'processor' => ['processor', 'prosesor', 'cpu', 'chipset'],
+        'memory' => ['memory', 'memori', 'ram', 'memoriram'],
+        'storage' => ['storage', 'penyimpanan', 'disk', 'harddisk', 'ssd', 'hdd'],
     ];
 
     /**
@@ -64,7 +70,7 @@ class AssetStagingService
     {
         $lines = [
             implode(',', self::HEADERS),
-            'SN12345678,ThinkPad T14,Lenovo',
+            'SN12345678,ThinkPad T14,Lenovo,Intel Core i7-1355U,16GB DDR4,512GB SSD',
         ];
 
         return implode("\r\n", $lines)."\r\n";
@@ -335,6 +341,9 @@ class AssetStagingService
                     'name' => $data['model'],
                     'serial_number' => $data['serial_number'],
                     'brand_id' => $data['brand_id'] ?? null,
+                    'processor' => $data['processor'] ?? null,
+                    'memory' => $data['memory'] ?? null,
+                    'storage' => $data['storage'] ?? null,
                     'category_id' => $categoryId,
                     'status' => 'In use',
                 ]);
@@ -392,7 +401,7 @@ class AssetStagingService
      * di $input ditimpa, sisanya ikut nilai sekarang, lalu validasi ulang
      * dan update status.
      *
-     * @param  array{serial_number?: string, model?: string, brand?: string, location_id?: int, department_id?: int, category_id?: int|null, user_name?: string|null}  $input
+     * @param  array{serial_number?: string, model?: string, brand?: string, processor?: string, memory?: string, storage?: string, location_id?: int, department_id?: int, category_id?: int|null, user_name?: string|null}  $input
      */
     public function updateRowAssignment(StagingRow $row, array $input): StagingRow
     {
@@ -410,6 +419,11 @@ class AssetStagingService
         $serial = $takeString('serial_number');
         $model = $takeString('model');
         $brand = $takeString('brand');
+        $specs = [
+            'processor' => $takeString('processor'),
+            'memory' => $takeString('memory'),
+            'storage' => $takeString('storage'),
+        ];
         $locationId = $takeId('location_id');
         $departmentId = $takeId('department_id');
         $categoryId = $takeId('category_id');
@@ -430,6 +444,7 @@ class AssetStagingService
             'serial_number' => $serial,
             'model' => $model,
             'brand' => $brand,
+            ...$specs,
         ], $seenSerials);
 
         $location = $locationId ? Location::find($locationId) : null;
@@ -497,6 +512,9 @@ class AssetStagingService
             'model' => $model,
             'brand' => $data['brand'] ?? '',
             'brand_id' => null,
+            'processor' => trim((string) ($data['processor'] ?? '')),
+            'memory' => trim((string) ($data['memory'] ?? '')),
+            'storage' => trim((string) ($data['storage'] ?? '')),
         ];
 
         $brandName = $normalized['brand'];
@@ -505,13 +523,85 @@ class AssetStagingService
             $brandId = $this->findIdByName(Brand::class, $brandName);
 
             if (! $brandId) {
-                $errors[] = "brand '{$brandName}' tidak dikenal";
+                $errors[] = $this->unknownBrandMessage($brandName);
             } else {
                 $normalized['brand_id'] = $brandId;
             }
         }
 
         return [$normalized, $errors];
+    }
+
+    /**
+     * Pesan brand tak dikenal + saran terdekat dari master (bila ada
+     * yang cukup mirip) agar user bisa langsung perbaiki atau tambah.
+     */
+    public function unknownBrandMessage(string $brandName): string
+    {
+        $message = "brand '{$brandName}' tidak dikenal";
+
+        $suggestion = $this->suggestBrand($brandName);
+
+        if ($suggestion) {
+            return $message.". Mungkin maksud Anda: '{$suggestion}'? Perbaiki ejaannya atau tambahkan '{$brandName}' ke master brand.";
+        }
+
+        return $message.'. Tambahkan ke master brand atau perbaiki ejaannya.';
+    }
+
+    /**
+     * Cari nama brand master yang paling mirip (case-insensitive,
+     * abaikan spasi/tanda baca). Null bila tidak ada yang cukup mirip.
+     */
+    public function suggestBrand(string $name, float $threshold = 60.0): ?string
+    {
+        $needle = $this->compactName($name);
+
+        if ($needle === '') {
+            return null;
+        }
+
+        $best = null;
+        $bestScore = 0.0;
+
+        foreach (Brand::pluck('name') as $candidate) {
+            similar_text($needle, $this->compactName((string) $candidate), $score);
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = (string) $candidate;
+            }
+        }
+
+        return $bestScore >= $threshold ? $best : null;
+    }
+
+    private function compactName(string $name): string
+    {
+        return preg_replace('/[^a-z0-9]/', '', mb_strtolower(trim($name))) ?? '';
+    }
+
+    /**
+     * Daftarkan brand dari baris staging ke master, lalu validasi ulang
+     * baris tersebut (idempotent: aman bila brand sudah ada).
+     */
+    public function createBrandFromRow(StagingRow $row): StagingRow
+    {
+        $brandName = trim((string) ($row->data['brand'] ?? ''));
+
+        if ($brandName === '') {
+            throw ValidationException::withMessages([
+                'brand' => 'Baris ini tidak punya nama brand untuk ditambahkan.',
+            ]);
+        }
+
+        $existingId = $this->findIdByName(Brand::class, $brandName);
+
+        if (! $existingId) {
+            Brand::create(['name' => $brandName]);
+        }
+
+        return $this->updateRowAssignment($row->refresh(), []);
     }
 
     private function findIdByName(string $modelClass, string $name): ?int

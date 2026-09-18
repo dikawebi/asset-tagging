@@ -10,12 +10,24 @@ use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\On;
 
 class ViewStagingBatch extends ViewRecord
 {
     protected static string $resource = StagingBatchResource::class;
 
     protected static ?string $title = 'Preview Staging';
+
+    /**
+     * Dipicu setiap ada edit inline di tabel baris: render ulang halaman
+     * agar tombol Commit Assign + ringkasan (valid/total) selalu mutakhir
+     * tanpa reload manual.
+     */
+    #[On('staging-row-saved')]
+    public function refreshAfterRowSaved(): void
+    {
+        // Kosong disengaja: menangani event saja sudah me-render ulang.
+    }
 
     protected function getHeaderActions(): array
     {
@@ -29,7 +41,7 @@ class ViewStagingBatch extends ViewRecord
                 ->modalDescription(fn (StagingBatch $record): string => "Assign {$record->valid_rows} baris valid ke dummy kosong secara berurutan. "
                     .'Lokasi, departemen, dan pemegang dicatat via riwayat. Proses ini transaksional (batal semua jika gagal).')
                 ->visible(fn (StagingBatch $record): bool => ! $record->isCommitted() && $record->valid_rows > 0)
-                ->action(function (StagingBatch $record): void {
+                ->action(function (StagingBatch $record, $livewire): void {
                     try {
                         $result = app(AssetStagingService::class)->commit($record);
 
@@ -38,6 +50,10 @@ class ViewStagingBatch extends ViewRecord
                             ->title("{$result['count']} aset berhasil di-assign")
                             ->body('Cetak QR lalu tempel ke perangkat via tombol Cetak QR.')
                             ->send();
+
+                        // Segarkan tabel baris agar nomor aset ter-assign +
+                        // tombol Cetak QR langsung tampil tanpa reload manual.
+                        $livewire->dispatch('staging-committed');
                     } catch (ValidationException $e) {
                         Notification::make()
                             ->danger()
