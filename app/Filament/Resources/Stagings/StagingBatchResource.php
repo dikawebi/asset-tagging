@@ -11,7 +11,6 @@ use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -38,33 +37,10 @@ class StagingBatchResource extends Resource
                 ->placeholder('Contoh: Collect BUA - Sep 2026')
                 ->required()
                 ->maxLength(255),
-            Select::make('location_id')
-                ->label('Lokasi (untuk semua baris)')
-                ->relationship('location', 'name')
-                ->searchable()
-                ->preload()
-                ->required(),
-            Select::make('department_id')
-                ->label('Departemen (untuk semua baris)')
-                ->relationship('department', 'name')
-                ->searchable()
-                ->preload()
-                ->required(),
-            Select::make('category_id')
-                ->label('Kategori (opsional, untuk semua baris)')
-                ->relationship('category', 'name')
-                ->searchable()
-                ->preload()
-                ->helperText('Kosongkan untuk memakai kategori bawaan dummy.'),
-            TextInput::make('user_name')
-                ->label('Pemegang (opsional, untuk semua baris)')
-                ->placeholder('Nama pemegang perangkat')
-                ->maxLength(255)
-                ->helperText('Kosongkan bila pemegang belum diketahui.'),
             FileUpload::make('csv_file')
                 ->label('File CSV Sysinfo')
                 ->helperText('Header Inggris atau Indonesia (mis. Nomor Seri, Merk, Tipe/Model). Kolom lain jadi info tambahan. Maks 5 MB.')
-                ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel', '.csv'])
+                ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel', 'application/octet-stream', 'text/x-csv'])
                 ->maxSize(5120)
                 ->directory('staging-uploads')
                 ->required()

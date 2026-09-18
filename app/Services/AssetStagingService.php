@@ -282,13 +282,7 @@ class AssetStagingService
             ]);
         }
 
-        if (! $batch->location_id || ! $batch->department_id) {
-            throw ValidationException::withMessages([
-                'batch' => 'Batch belum punya lokasi/departemen. Lengkapi dulu sebelum commit.',
-            ]);
-        }
-
-        // Baris tanpa lokasi/departemen (belum diisi manual) tidak ikut commit.
+        // Baris tanpa lokasi/departemen (belum diisi di preview) tidak ikut commit.
         $incomplete = $batch->rows()
             ->where('status', StagingRow::STATUS_VALID)
             ->orderBy('row_number')

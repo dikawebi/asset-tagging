@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Department;
-use App\Models\Location;
 use App\Models\StagingBatch;
 use App\Models\User;
 use App\Services\AssetStagingService;
@@ -42,9 +40,6 @@ class StagingDemoSeeder extends Seeder
             'file_name' => 'demo-sysinfo.csv',
             'uploaded_by' => User::orderBy('id')->value('id'),
             'status' => StagingBatch::STATUS_UPLOADED,
-            'location_id' => Location::whereRaw('LOWER(name) = ?', ['bp site bua'])->value('id'),
-            'department_id' => Department::whereRaw('LOWER(name) = ?', ['it'])->value('id'),
-            'user_name' => 'andi.pratama',
         ]);
 
         app(AssetStagingService::class)->parseUpload($batch, 'staging-uploads/demo-sysinfo.csv');

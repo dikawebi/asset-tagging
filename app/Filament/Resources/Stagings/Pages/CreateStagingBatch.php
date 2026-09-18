@@ -18,6 +18,14 @@ class CreateStagingBatch extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $this->uploadedPath = (string) ($data['csv_file'] ?? '');
+
+        if ($this->uploadedPath === ''
+            || ! in_array(mb_strtolower(pathinfo($this->uploadedPath, PATHINFO_EXTENSION)), ['csv', 'txt'], true)) {
+            throw ValidationException::withMessages([
+                'csv_file' => 'File harus berekstensi .csv (atau .txt berisi CSV).',
+            ]);
+        }
+
         unset($data['csv_file']);
 
         $data['file_name'] = basename($this->uploadedPath);
